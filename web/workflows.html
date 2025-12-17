@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n Workflow Manager</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        .workflow-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .workflow-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .workflow-desc {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .import-url {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+        .instructions {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Kindle Converter Workflow</h1>
+        
+        <div class="instructions">
+            <strong>How to import:</strong>
+            <ol>
+                <li>Copy the URL below</li>
+                <li>In n8n, go to Workflows → Import from URL</li>
+                <li>Paste the URL and click Import</li>
+                <li>Save and Activate the workflow</li>
+            </ol>
+        </div>
+
+        <div class="workflow-card">
+            <div class="workflow-name">Kindle Book Converter</div>
+            <div class="workflow-desc">Converts EPUB books to MOBI and sends to Kindle devices</div>
+            <div class="import-url" id="mainUrl">Loading...</div>
+            <a href="/main-workflow.json" class="btn" target="_blank">View JSON</a>
+            <button class="btn" onclick="copyUrl('mainUrl')">Copy URL</button>
+        </div>
+    </div>
+
+    <script>
+        // Use the VM's IP address
+        const baseUrl = 'http://192.168.1.103:3000';
+        
+        document.getElementById('mainUrl').textContent = baseUrl + '/main-workflow.json';
+        
+        function copyUrl(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('URL copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kindle-converter
+  namespace: media
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kindle-converter
+  template:
+    metadata:
+      labels:
+        app: kindle-converter
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/datahawker/kindle-converter:latest
+          ports:
+            - containerPort: 5678
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: kindle-smtp
+                  key: SMTP_HOST
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: kindle-smtp
+                  key: SMTP_PORT
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: kindle-smtp
+                  key: SMTP_USER
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: kindle-smtp
+                  key: SMTP_PASS
+            - name: SMTP_SENDER
+              valueFrom:
+                secretKeyRef:
+                  name: kindle-smtp
+                  key: SMTP_SENDER
+          volumeMounts:
+            - name: media
+              mountPath: /mnt/nas/media
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        - name: web
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: web-content
+              mountPath: /usr/share/nginx/html
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-library
+        - name: web-content
+          configMap:
+            name: kindle-web-content
+        - name: nginx-config
+          configMap:
+            name: kindle-nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kindle-converter
+  namespace: media
+spec:
+  type: ClusterIP
+  selector:
+    app: kindle-converter
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+    - name: api
+      port: 5678
+      targetPort: 5678

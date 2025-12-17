@@ -1,0 +1,88 @@
+{
+  "name": "Book Library Browser",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "list-books",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "listBooksWebhook",
+      "name": "List Books Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "command": "find /books -name '*.epub' -o -name '*.mobi' | head -50"
+      },
+      "id": "findBooks",
+      "name": "Find Books",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $input.first().json.stdout.split('\\n').filter(f => f);\n\nreturn files.map(filepath => {\n  const filename = filepath.split('/').pop();\n  const parts = filename.split(' - ');\n  \n  return {\n    json: {\n      filepath: filepath,\n      filename: filename,\n      author: parts.length > 1 ? parts[0] : 'Unknown',\n      title: parts.length > 1 ? parts[1]?.replace(/\\.(epub|mobi)$/i, '') : filename.replace(/\\.(epub|mobi)$/i, '')\n    }\n  };\n});"
+      },
+      "id": "formatBooks",
+      "name": "Format Books",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-books",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "id": "sendBooksWebhook",
+      "name": "Send Books Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const books = $input.first().json.body.books;\nconst email = $input.first().json.body.email;\n\nreturn books.map(book => ({\n  json: {\n    filepath: book.filepath,\n    filename: book.filename,\n    email: email\n  }\n}));"
+      },
+      "id": "processRequest",
+      "name": "Process Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "command": "ebook-convert '{{ $json.filepath }}' '/converted/{{ $json.filename.replace('.epub', '.mobi') }}'",
+        "options": {}
+      },
+      "id": "convertBook",
+      "name": "Convert Book",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [650, 400]
+    }
+  ],
+  "connections": {
+    "List Books Webhook": {
+      "main": [[{"node": "Find Books", "type": "main", "index": 0}]]
+    },
+    "Find Books": {
+      "main": [[{"node": "Format Books", "type": "main", "index": 0}]]
+    },
+    "Send Books Webhook": {
+      "main": [[{"node": "Process Request", "type": "main", "index": 0}]]
+    },
+    "Process Request": {
+      "main": [[{"node": "Convert Book", "type": "main", "index": 0}]]
+    }
+  }
+}

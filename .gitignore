@@ -1,0 +1,13 @@
+# Environment files with secrets
+.env
+
+# Temp directories
+uploads/
+converted/
+config/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store

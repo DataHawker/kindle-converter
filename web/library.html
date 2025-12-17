@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Library - Send to Kindle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .kindle-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .kindle-selector select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .book-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .book-card.selected {
+            background: #f0f0ff;
+            border: 2px solid #667eea;
+        }
+        
+        .book-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .book-author {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .book-format {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #495057;
+            margin-right: 5px;
+        }
+        
+        .book-format.epub {
+            background: #d4f4dd;
+            color: #1e7e34;
+        }
+        
+        .book-format.mobi {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .send-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .send-button.show {
+            display: block;
+        }
+        
+        .send-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+        
+        .selected-count {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .selected-count.show {
+            display: block;
+        }
+        
+        .status-message {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .status-message.show {
+            display: block;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Your Book Library</h1>
+            <p class="subtitle">Select books to send to your Kindle</p>
+            
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search by title or author...">
+                </div>
+                
+                <div class="kindle-selector">
+                    <label for="kindleEmail">Send to:</label>
+                    <select id="kindleEmail">
+                        <option value="katie.n.weeks_EamFUO@kindle.com">Katie's Kindle</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bookGrid" class="book-grid">
+            <div class="loading">Loading your library...</div>
+        </div>
+    </div>
+    
+    <div id="selectedCount" class="selected-count">
+        <span id="countText">0 books selected</span>
+    </div>
+    
+    <button id="sendButton" class="send-button" onclick="sendSelectedBooks()">
+        Send to Kindle
+    </button>
+    
+    <div id="statusMessage" class="status-message"></div>
+    
+    <script>
+        let books = [];
+        let selectedBooks = new Set();
+        
+        // Load books on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadBooks();
+            loadSavedEmails();
+        });
+        
+        async function loadBooks() {
+            try {
+                const response = await fetch('http://localhost:5678/webhook/list-books');
+                if (!response.ok) {
+                    throw new Error('Failed to load books');
+                }
+                
+                books = await response.json();
+                displayBooks(books);
+            } catch (error) {
+                console.error('Error loading books:', error);
+                document.getElementById('bookGrid').innerHTML = `
+                    <div class="loading">
+                        Error loading books. Make sure n8n workflow is running.
+                    </div>
+                `;
+            }
+        }
+        
+        function displayBooks(bookList) {
+            const grid = document.getElementById('bookGrid');
+            
+            if (bookList.length === 0) {
+                grid.innerHTML = '<div class="loading">No books found</div>';
+                return;
+            }
+            
+            grid.innerHTML = bookList.map((book, index) => {
+                const title = book.title || book.filename.replace(/\.[^.]+$/, '');
+                const author = book.author || 'Unknown Author';
+                const format = book.filename.split('.').pop().toLowerCase();
+                
+                return `
+                    <div class="book-card" data-index="${index}" onclick="toggleBookSelection(${index})">
+                        <div class="book-title">${title}</div>
+                        <div class="book-author">${author}</div>
+                        <span class="book-format ${format}">${format.toUpperCase()}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleBookSelection(index) {
+            const card = document.querySelector(`[data-index="${index}"]`);
+            
+            if (selectedBooks.has(index)) {
+                selectedBooks.delete(index);
+                card.classList.remove('selected');
+            } else {
+                selectedBooks.add(index);
+                card.classList.add('selected');
+            }
+            
+            updateSelectionUI();
+        }
+        
+        function updateSelectionUI() {
+            const count = selectedBooks.size;
+            const countElement = document.getElementById('selectedCount');
+            const sendButton = document.getElementById('sendButton');
+            
+            if (count > 0) {
+                document.getElementById('countText').textContent = `${count} book${count !== 1 ? 's' : ''} selected`;
+                countElement.classList.add('show');
+                sendButton.classList.add('show');
+            } else {
+                countElement.classList.remove('show');
+                sendButton.classList.remove('show');
+            }
+        }
+        
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = books.filter(book => {
+                const title = (book.title || book.filename).toLowerCase();
+                const author = (book.author || '').toLowerCase();
+                return title.includes(searchTerm) || author.includes(searchTerm);
+            });
+            displayBooks(filtered);
+        });
+        
+        async function sendSelectedBooks() {
+            if (selectedBooks.size === 0) return;
+            
+            const kindleEmail = document.getElementById('kindleEmail').value;
+            const selectedBookFiles = Array.from(selectedBooks).map(index => books[index]);
+            
+            showStatus('Sending books to Kindle...', 'loading');
+            
+            try {
+                const response = await fetch('http://localhost:5678/webhook/send-books', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        books: selectedBookFiles,
+                        email: kindleEmail
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to send books');
+                }
+                
+                showStatus(`✅ Successfully sent ${selectedBooks.size} book(s) to ${kindleEmail}!`, 'success');
+                
+                // Clear selection
+                selectedBooks.clear();
+                document.querySelectorAll('.book-card.selected').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                updateSelectionUI();
+                
+            } catch (error) {
+                showStatus('❌ Error sending books: ' + error.message, 'error');
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.className = `status-message show ${type}`;
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    statusElement.classList.remove('show');
+                }, 5000);
+            }
+        }
+        
+        function loadSavedEmails() {
+            const savedEmails = JSON.parse(localStorage.getItem('kindleEmails') || '["katie.n.weeks_EamFUO@kindle.com"]');
+            const select = document.getElementById('kindleEmail');
+            
+            select.innerHTML = savedEmails.map(email => 
+                `<option value="${email}">${email}</option>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>

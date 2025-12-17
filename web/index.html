@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katie's Kindle Library Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-refresh {
+            background: #48bb78;
+        }
+        
+        .btn-refresh:hover {
+            background: #38a169;
+        }
+        
+        .kindle-selector {
+            padding: 10px 35px 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            cursor: pointer;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .book-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        .book-table thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+        }
+        
+        .book-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 14px;
+        }
+        
+        .book-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+        
+        .book-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .book-table tbody tr.selected {
+            background: #e9ecef;
+        }
+        
+        .checkbox-cell {
+            width: 40px;
+        }
+        
+        .title-cell {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .author-cell {
+            color: #666;
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .format-badge.epub {
+            background: #d4f4dd;
+            color: #1e7e34;
+        }
+        
+        .format-badge.mobi {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #e3f2fd;
+            color: #1976d2;
+            text-transform: uppercase;
+        }
+        
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .floating-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .selected-count {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .selected-count.show {
+            display: block;
+        }
+        
+        .btn-send {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .btn-send.show {
+            display: block;
+        }
+        
+        .btn-send:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .device-list {
+            margin-bottom: 20px;
+        }
+        
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .device-info {
+            flex: 1;
+        }
+        
+        .device-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .device-email {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-remove:hover {
+            background: #c82333;
+        }
+        
+        .add-device {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .btn-add {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-add:hover {
+            background: #38a169;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+                text-align: center;
+            }
+            
+            .search-box {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            .kindle-selector {
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 12px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            /* Mobile table - hide less important columns */
+            .book-table th:nth-child(4),
+            .book-table td:nth-child(4),
+            .book-table th:nth-child(5),
+            .book-table td:nth-child(5) {
+                display: none;
+            }
+            
+            .book-table {
+                font-size: 12px;
+            }
+            
+            .title-cell, .author-cell {
+                max-width: 120px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .actions-cell {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn-small {
+                width: 100%;
+                padding: 8px;
+            }
+            
+            .pagination {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .pagination button {
+                width: 100%;
+            }
+            
+            #pageInfo {
+                text-align: center;
+            }
+            
+            .floating-actions {
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .btn-send {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            
+            .modal-content input {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Even smaller screens */
+            .header h1 {
+                font-size: 18px;
+            }
+            
+            /* Show only title, author, and actions on very small screens */
+            .book-table th:nth-child(1),
+            .book-table td:nth-child(1) {
+                padding: 5px;
+            }
+            
+            .title-cell, .author-cell {
+                max-width: 100px;
+            }
+            
+            .stats {
+                font-size: 14px;
+            }
+            
+            .stat-value {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Katie's Kindle Library Manager</h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by title or author...">
+            </div>
+            <div class="controls">
+                <select id="kindleEmail" class="kindle-selector">
+                    <!-- Populated from localStorage -->
+                </select>
+                <button class="btn" onclick="manageEmails()">⚙️ Manage</button>
+                <button class="btn btn-refresh" onclick="syncLibrary()">🔄 Sync Library</button>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Books</div>
+                <div class="stat-value" id="totalBooks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Book Added</div>
+                <div class="stat-value" id="lastBookAdded" style="font-size: 14px; line-height: 1.4;">None</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Sync</div>
+                <div class="stat-value" id="lastSync" style="font-size: 16px;">Never</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="book-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortBooks('title')">Title ↕</th>
+                        <th style="cursor: pointer;" onclick="sortBooks('author')">Author ↕</th>
+                        <th style="cursor: pointer;" onclick="sortBooks('format')">Format ↕</th>
+                        <th style="cursor: pointer;" onclick="sortBooks('added')">Added ↕</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                            Click "Sync Library" to load books
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; padding: 20px;">
+            <button class="btn" onclick="previousPage()" id="prevBtn" style="margin-right: 10px;">← Previous</button>
+            <span id="pageInfo" style="margin: 0 20px;">Page 1</span>
+            <button class="btn" onclick="nextPage()" id="nextBtn">Next →</button>
+        </div>
+    </div>
+    
+    <div class="floating-actions">
+        <div id="selectedCount" class="selected-count">
+            <span id="countText">0 books selected</span>
+        </div>
+        <button id="sendButton" class="btn-send" onclick="sendSelectedBooks()">
+            Send to Kindle
+        </button>
+        <button id="deleteButton" class="btn-send" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); margin-bottom: 15px; display: none;" onclick="deleteSelectedBooks()">
+            Delete Selected
+        </button>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div id="loadingText">Processing...</div>
+        </div>
+    </div>
+    
+    <div id="emailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Manage Kindle Devices</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="device-list" id="deviceList">
+                <!-- Devices populated here -->
+            </div>
+            
+            <div class="add-device">
+                <h3 style="margin-bottom: 15px; color: #333;">Add New Device</h3>
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" id="newDeviceName" class="form-input" placeholder="e.g., John">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kindle Email</label>
+                    <input type="email" id="newDeviceEmail" class="form-input" placeholder="username@kindle.com">
+                </div>
+                <button class="btn-add" onclick="addDevice()">Add Device</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let books = [];
+        let selectedBooks = new Set();
+        let sortField = 'added';
+        let sortDirection = 'desc';
+        let currentPage = 1;
+        let booksPerPage = 50;
+        
+        // Load saved data on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedBooks();
+            loadSavedEmails();
+        });
+        
+        function loadSavedBooks() {
+            const saved = localStorage.getItem('kindleBooks');
+            if (saved) {
+                books = JSON.parse(saved);
+                displayBooks(books);
+                updateStats();
+                document.getElementById('lastSync').textContent = new Date(localStorage.getItem('lastSync') || Date.now()).toLocaleTimeString();
+            }
+        }
+        
+        function loadSavedEmails() {
+            const saved = localStorage.getItem('kindleDevices');
+            const defaultDevices = [
+                { email: 'katie.n.weeks_EamFUO@kindle.com', name: 'Katie' }
+            ];
+            
+            let devices = saved ? JSON.parse(saved) : defaultDevices;
+            const select = document.getElementById('kindleEmail');
+            select.innerHTML = devices.map(device => 
+                `<option value="${device.email}">${device.name}'s Kindle</option>`
+            ).join('');
+        }
+        
+        function manageEmails() {
+            const modal = document.getElementById('emailModal');
+            modal.classList.add('show');
+            updateDeviceList();
+        }
+        
+        function closeModal() {
+            document.getElementById('emailModal').classList.remove('show');
+        }
+        
+        function updateDeviceList() {
+            let devices = JSON.parse(localStorage.getItem('kindleDevices') || '[{"email":"katie.n.weeks_EamFUO@kindle.com","name":"Katie"}]');
+            const list = document.getElementById('deviceList');
+            
+            list.innerHTML = devices.map((device, index) => `
+                <div class="device-item">
+                    <div class="device-info">
+                        <div class="device-name">${device.name}'s Kindle</div>
+                        <div class="device-email">${device.email}</div>
+                    </div>
+                    <button class="btn-remove" onclick="removeDevice(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+        
+        function addDevice() {
+            const name = document.getElementById('newDeviceName').value.trim();
+            const email = document.getElementById('newDeviceEmail').value.trim();
+            
+            if (!name || !email) {
+                alert('Please enter both name and email');
+                return;
+            }
+            
+            if (!email.includes('@kindle.com')) {
+                alert('Email must end with @kindle.com');
+                return;
+            }
+            
+            let devices = JSON.parse(localStorage.getItem('kindleDevices') || '[{"email":"katie.n.weeks_EamFUO@kindle.com","name":"Katie"}]');
+            devices.push({ email: email, name: name });
+            localStorage.setItem('kindleDevices', JSON.stringify(devices));
+            
+            document.getElementById('newDeviceName').value = '';
+            document.getElementById('newDeviceEmail').value = '';
+            
+            updateDeviceList();
+            loadSavedEmails();
+        }
+        
+        function removeDevice(index) {
+            let devices = JSON.parse(localStorage.getItem('kindleDevices') || '[{"email":"katie.n.weeks_EamFUO@kindle.com","name":"Katie"}]');
+            const device = devices[index];
+            
+            if (confirm(`Remove ${device.name}'s Kindle?`)) {
+                devices.splice(index, 1);
+                localStorage.setItem('kindleDevices', JSON.stringify(devices));
+                updateDeviceList();
+                loadSavedEmails();
+            }
+        }
+        
+        async function syncLibrary() {
+            showLoading('Scanning library...');
+            
+            try {
+                const response = await fetch('/api/sync-library', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('Sync failed');
+                
+                books = await response.json();
+                
+                // Add metadata
+                books = books.map((book, index) => ({
+                    ...book,
+                    id: index,
+                    added: new Date().toISOString()
+                }));
+                
+                // Save to localStorage
+                localStorage.setItem('kindleBooks', JSON.stringify(books));
+                localStorage.setItem('lastSync', new Date().toISOString());
+                
+                displayBooks(books);
+                updateStats();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                hideLoading();
+                alert('Failed to sync library. Check if the API server is running.');
+            }
+        }
+        
+        function displayBooks(bookList) {
+            const tbody = document.getElementById('bookTableBody');
+            
+            if (bookList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                            No books found. Click "Sync Library" to scan for books.
+                        </td>
+                    </tr>
+                `;
+                updatePagination();
+                return;
+            }
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * booksPerPage;
+            const endIndex = startIndex + booksPerPage;
+            const paginatedBooks = bookList.slice(startIndex, endIndex);
+            
+            tbody.innerHTML = paginatedBooks.map(book => `
+                <tr data-id="${book.id}" class="${selectedBooks.has(book.id) ? 'selected' : ''}">
+                    <td class="checkbox-cell">
+                        <input type="checkbox" ${selectedBooks.has(book.id) ? 'checked' : ''} 
+                               onchange="toggleBookSelection(${book.id})">
+                    </td>
+                    <td class="title-cell">${book.title || book.filename || 'Unknown'}</td>
+                    <td class="author-cell">${book.author || 'Unknown Author'}</td>
+                    <td>
+                        <span class="format-badge">${(book.format || 'epub').toUpperCase()}</span>
+                    </td>
+                    <td>${book.added ? new Date(book.added).toLocaleDateString() : '-'}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-small" onclick="sendSingleBook(${book.id})">Send</button>
+                        <button class="btn btn-small" style="background: #dc3545;" onclick="deleteBook(${book.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updatePagination();
+        }
+        
+        function updatePagination() {
+            const totalPages = Math.ceil(books.length / booksPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} (${books.length} books)`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+        
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayBooks(books);
+            }
+        }
+        
+        function nextPage() {
+            const totalPages = Math.ceil(books.length / booksPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayBooks(books);
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('totalBooks').textContent = books.length;
+            
+            // Show the most recently added book with author
+            if (books.length > 0) {
+                const sortedByDate = [...books].sort((a, b) => 
+                    new Date(b.added || 0) - new Date(a.added || 0)
+                );
+                const lastBook = sortedByDate[0];
+                const title = lastBook.title || 'Unknown';
+                const author = lastBook.author || 'Unknown Author';
+                
+                // Create formatted HTML with title and author
+                document.getElementById('lastBookAdded').innerHTML = 
+                    `${title}<br><span style="color: #6c757d; font-size: 12px;">by ${author}</span>`;
+            } else {
+                document.getElementById('lastBookAdded').textContent = 'None';
+            }
+            
+            document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+        }
+        
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll').checked;
+            if (selectAll) {
+                books.forEach(book => selectedBooks.add(book.id));
+            } else {
+                selectedBooks.clear();
+            }
+            displayBooks(books);
+            updateSelectionUI();
+        }
+        
+        function toggleBookSelection(bookId) {
+            if (selectedBooks.has(bookId)) {
+                selectedBooks.delete(bookId);
+            } else {
+                selectedBooks.add(bookId);
+            }
+            
+            const row = document.querySelector(`tr[data-id="${bookId}"]`);
+            row.classList.toggle('selected');
+            updateSelectionUI();
+        }
+        
+        function updateSelectionUI() {
+            const count = selectedBooks.size;
+            const countElement = document.getElementById('selectedCount');
+            const sendButton = document.getElementById('sendButton');
+            const deleteButton = document.getElementById('deleteButton');
+            
+            if (count > 0) {
+                document.getElementById('countText').textContent = `${count} book${count !== 1 ? 's' : ''} selected`;
+                countElement.classList.add('show');
+                sendButton.classList.add('show');
+                deleteButton.style.display = 'block';
+            } else {
+                countElement.classList.remove('show');
+                sendButton.classList.remove('show');
+                deleteButton.style.display = 'none';
+            }
+        }
+        
+        function sortBooks(field) {
+            if (sortField === field) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField = field;
+                sortDirection = 'asc';
+            }
+            
+            books.sort((a, b) => {
+                let aVal = a[field] || '';
+                let bVal = b[field] || '';
+                
+                if (field === 'added') {
+                    aVal = new Date(aVal).getTime();
+                    bVal = new Date(bVal).getTime();
+                }
+                
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            displayBooks(books);
+        }
+        
+        async function deleteBook(bookId) {
+            const book = books.find(b => b.id === bookId);
+            if (!confirm(`⚠️ PERMANENTLY DELETE "${book.title}"?\n\nThis will delete the actual file from your NAS and cannot be undone!`)) return;
+            
+            // Remove from local list
+            books = books.filter(b => b.id !== bookId);
+            selectedBooks.delete(bookId);
+            
+            // Save to localStorage
+            localStorage.setItem('kindleBooks', JSON.stringify(books));
+            
+            displayBooks(books);
+            updateStats();
+            updateSelectionUI();
+            
+            // Optional: Delete actual file via webhook
+            try {
+                await fetch('/api/delete-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filepath: book.filepath })
+                });
+            } catch (error) {
+                console.log('Could not delete file from server');
+            }
+        }
+        
+        async function deleteSelectedBooks() {
+            const count = selectedBooks.size;
+            if (!confirm(`⚠️ PERMANENTLY DELETE ${count} selected book${count !== 1 ? 's' : ''}?\n\nThis will delete the actual files from your NAS and cannot be undone!`)) return;
+            
+            showLoading(`Deleting ${count} books...`);
+            
+            const toDelete = Array.from(selectedBooks).map(id => books.find(b => b.id === id));
+            const filepaths = toDelete.map(book => book.filepath);
+            
+            try {
+                // Use bulk delete endpoint
+                const response = await fetch('/api/delete-books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filepaths: filepaths })
+                });
+                
+                const result = await response.json();
+                console.log(`Deleted ${result.deleted} books, ${result.failed} failed`);
+                
+                // Remove from local list
+                books = books.filter(b => !selectedBooks.has(b.id));
+                selectedBooks.clear();
+                
+                // Save to localStorage
+                localStorage.setItem('kindleBooks', JSON.stringify(books));
+                
+                displayBooks(books);
+                updateStats();
+                updateSelectionUI();
+                
+                hideLoading();
+                
+                if (result.failed > 0) {
+                    alert(`Deleted ${result.deleted} books. ${result.failed} failed to delete.`);
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                hideLoading();
+                alert('Error deleting books');
+            }
+        }
+        
+        // Conversion function removed - Amazon handles EPUB conversion automatically
+        
+        async function sendSelectedBooks() {
+            const kindleEmail = document.getElementById('kindleEmail').value;
+            const selected = Array.from(selectedBooks).map(id => books.find(b => b.id === id));
+            
+            showLoading(`Sending ${selected.length} book(s) to Kindle...`);
+            
+            try {
+                const response = await fetch('/api/send-books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        books: selected,
+                        email: kindleEmail
+                    })
+                });
+                
+                if (response.ok) {
+                    selectedBooks.clear();
+                    displayBooks(books);
+                    updateSelectionUI();
+                    alert(`Successfully sent ${selected.length} book(s) to ${kindleEmail}`);
+                }
+            } catch (error) {
+                console.error('Send error:', error);
+                alert('Error sending books. Check if the API server is running.');
+            }
+            
+            hideLoading();
+        }
+        
+        async function sendSingleBook(bookId) {
+            const book = books.find(b => b.id === bookId);
+            const kindleEmail = document.getElementById('kindleEmail').value;
+            
+            showLoading(`Sending ${book.title} to Kindle...`);
+            
+            try {
+                const response = await fetch('/api/send-books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        books: [book],
+                        email: kindleEmail
+                    })
+                });
+                
+                if (response.ok) {
+                    alert(`Sent ${book.title} to ${kindleEmail}`);
+                }
+            } catch (error) {
+                console.error('Send error:', error);
+            }
+            
+            hideLoading();
+        }
+        
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = books.filter(book => {
+                const title = (book.title || '').toLowerCase();
+                const author = (book.author || '').toLowerCase();
+                return title.includes(searchTerm) || author.includes(searchTerm);
+            });
+            displayBooks(filtered);
+        });
+        
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
