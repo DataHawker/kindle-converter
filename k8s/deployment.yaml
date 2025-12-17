@@ -16,6 +16,8 @@ spec:
       labels:
         app: kindle-converter
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: api
           image: ghcr.io/datahawker/kindle-converter:latest
